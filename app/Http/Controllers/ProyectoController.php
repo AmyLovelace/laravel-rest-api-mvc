@@ -6,9 +6,55 @@ use Illuminate\Support\Facades\Http;
 
 use Illuminate\Http\Request;
 use App\Models\Proyecto;
+use App\Services\ProyectoService;
 
 class ProyectoController extends Controller
 {
+    protected $proyectos;
+
+    public function __construct(ProyectoService $proyectos)
+    {
+        $this->proyectos = $proyectos;
+    }
+
+    public function index()
+    {
+        $proyectos = Proyecto::all();
+        return view('proyectos.index', compact('proyectos'));
+    }
+
+    public function show(Request $request, $id)
+    {
+        $proyecto = $this->proyectos->obtener($id);
+
+        return $request->wantsJson()
+            ? response()->json($proyecto)
+            : view('proyectos.show', compact('proyecto'));
+    }
+
+
+public function create()
+{
+    return view('proyectos.create');
+}
+
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'nombre' => 'required|string',
+        'estado' => 'required|string',
+        'fecha_inicio' => 'required|date',
+        'responsable' => 'required|string',
+        'monto' => 'required|integer',
+    ]);
+
+    $proyecto = $this->proyectos->crear($validated);
+
+    return $request->wantsJson()
+        ? response()->json(['message' => 'Proyecto creado', 'data' => $proyecto], 201)
+        : redirect()->route('proyectos.create')->with('success', 'Proyecto creado exitosamente');
+}
+
     /**
      * Listar todos los proyectos.
      */
@@ -17,13 +63,15 @@ class ProyectoController extends Controller
         return response()->json(Proyecto::all());
     }
 
-    /**
-     * Agregar Proyecto.
-     */
-    public function store(Request $request)
+    public function edit($id)
     {
-        // Validación simple
-        $request->validate([
+        $proyecto = $this->proyectos->obtener($id);
+        return view('proyectos.edit', compact('proyecto'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
             'nombre' => 'required|string',
             'estado' => 'required|string',
             'fecha_inicio' => 'required|date',
@@ -31,107 +79,38 @@ class ProyectoController extends Controller
             'monto' => 'required|integer',
         ]);
 
-        $proyecto = Proyecto::create($request->only(['nombre', 'estado', 'fecha_inicio', 'responsable', 'monto']));
+        $proyecto = $this->proyectos->actualizar($id, $validated);
 
-        // return response()->json([
-        //     'message' => 'Proyecto creado',
-        //     'data' => $proyecto
-        // ], 201);
-        return redirect('/proyectos/create')->with('success', 'Proyecto creado exitosamente');
+        return $request->wantsJson()
+            ? response()->json(['message' => 'Proyecto actualizado', 'data' => $proyecto])
+            : redirect()->route('proyectos.edit', $id)->with('success', 'Proyecto actualizado con éxito');
     }
 
-    /**
-     * Obtener un proyecto por su id.
-     */
-    public function show($id)
+    public function destroy(Request $request, $id)
     {
-        $proyecto = Proyecto::findOrFail($id);
-        return view('proyectos.show', compact('proyecto'));
+        $this->proyectos->eliminar($id);
+
+        return $request->wantsJson()
+            ? response()->json(['message' => 'Proyecto eliminado'])
+            : redirect()->route('proyectos.panel')->with('success', 'Proyecto eliminado correctamente');
     }
 
-    /**
-     * Actualizar proyecto por su id.
-     */
-    public function update(Request $request, $id)
+    public function panel()
     {
-        $proyecto = Proyecto::findOrFail($id);
-        $proyecto->update($request->only(['nombre', 'estado', 'fecha_inicio', 'responsable', 'monto']));
-
-        // return response()->json([
-        //     'message' => 'Proyecto actualizado',
-        //     'data' => $proyecto
-        // ]);
-        return redirect()->route('proyectos.edit', $proyecto->id)
-        ->with('success', 'Proyecto actualizado con éxito');
+        $proyectos = $this->proyectos->listar();
+        $uf = $this->proyectos->obtenerUf();
+        return view('proyectos.panel', compact('proyectos', 'uf'));
     }
 
-
-    public function edit($id)
-{
-    $proyecto = Proyecto::findOrFail($id);
-    return view('proyectos.edit', compact('proyecto'));
-}
-
-
-    /**
-     * Eliminar proyecto por su Id.
-     */
-    public function destroy($id)
-{
-    $proyecto = Proyecto::findOrFail($id);
-    $proyecto->delete();
-
-    return redirect()->route('proyectos.panel')->with('success', 'Proyecto eliminado correctamente');
-}
-
-    public function create()
+    public function buscar(Request $request)
     {
-        return view('proyectos.create');
-    }
+        $id = $request->input('id');
 
-    public function index()
-        {
-            $proyectos = Proyecto::all();
-            return view('proyectos.index', compact('proyectos'));
+        if (!$id || !$this->proyectos->existe($id)) {
+            return redirect()->route('proyectos.panel')->withErrors(['id' => 'ID inválido o proyecto no encontrado']);
         }
 
-
- 
-
-        public function panel()
-        {
-            try {
-                $response = Http::get('https://mindicador.cl/api/uf');
-                $data = $response->json();
-        
-                $uf = null;
-                if (!empty($data['serie']) && isset($data['serie'][0]['valor'])) {
-                    $uf = $data['serie'][0]['valor'];
-                }
-            } catch (\Exception $e) {
-                $uf = null;
-            }
-        
-            $proyectos = Proyecto::all(); 
-        
-            return view('proyectos.panel', compact('proyectos', 'uf'));
-        }
-
-        public function buscar(Request $request)
-        {
-            $id = $request->input('id');
-
-            if (!$id) {
-                return redirect()->route('proyectos.panel')->withErrors(['id' => 'Debes ingresar un ID']);
-            }
-
-            // Opcional: verificar si el proyecto existe
-            if (!Proyecto::find($id)) {
-                return redirect()->route('proyectos.panel')->withErrors(['id' => 'No existe un proyecto con ese ID']);
-            }
-
-            return redirect()->route('proyectos.show', ['id' => $id]);
-        }
-
+        return redirect()->route('proyectos.show', ['id' => $id]);
+    }
 }
           
