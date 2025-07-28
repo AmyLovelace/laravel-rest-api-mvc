@@ -33,10 +33,10 @@ class ProyectoController extends Controller
     }
 
 
-public function create()
-{
-    return view('proyectos.create');
-}
+            public function create()
+            {
+                return view('proyectos.create');
+            }
 
 public function store(Request $request)
 {
@@ -55,9 +55,7 @@ public function store(Request $request)
         : redirect()->route('proyectos.create')->with('success', 'Proyecto creado exitosamente');
 }
 
-    /**
-     * Listar todos los proyectos.
-     */
+
     public function showAll()
     {
         return response()->json(Proyecto::all());
@@ -101,16 +99,39 @@ public function store(Request $request)
         $uf = $this->proyectos->obtenerUf();
         return view('proyectos.panel', compact('proyectos', 'uf'));
     }
-
+    
     public function buscar(Request $request)
     {
         $id = $request->input('id');
-
-        if (!$id || !$this->proyectos->existe($id)) {
-            return redirect()->route('proyectos.panel')->withErrors(['id' => 'ID inválido o proyecto no encontrado']);
+        $proyecto = Proyecto::find($id);
+    
+        if (!$proyecto) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => true,
+                    'message' => "No se encontró ningún proyecto con ID $id."
+                ], 404);
+            }
+    
+            if (!$proyecto) {
+                return view('proyectos.show', [
+                    'proyecto' => null,
+                    'error' => "No se encontró ningún proyecto con ID $id."
+                ]);
+            }
         }
-
-        return redirect()->route('proyectos.show', ['id' => $id]);
+    
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'proyecto' => $proyecto
+            ]);
+        }
+    
+        return redirect()->route('proyectos.show', $proyecto->id);
     }
+    
+
+    
 }
           

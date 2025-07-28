@@ -52,4 +52,16 @@
         <a href="{{ route('proyectos.panel') }}" class="btn btn-secondary">Volver</a>
     </form>
 </div>
+
+@if(session('success'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: '{{ session('success') }}',
+            confirmButtonColor: '#3085d6'
+        });
+    </script>
+@endif
+
 @endsection

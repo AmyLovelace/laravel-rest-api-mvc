@@ -1,9 +1,11 @@
 @extends('layouts.app')
 
+
+
 @section('content')
 <div class="container mt-4">
     <h1 class="mb-4">Detalle del Proyecto</h1>
-
+    @if($proyecto)
     <div class="card">
         <div class="card-body">
             <ul class="list-group list-group-flush">
@@ -32,10 +34,24 @@
             </ul>
         </div>
     </div>
-
     <div class="mt-4 d-flex gap-2">
         <a href="{{ route('proyectos.panel') }}" class="btn btn-secondary">← Volver al panel</a>
         <a href="{{ route('proyectos.edit', $proyecto->id) }}" class="btn btn-warning">✏️ Editar</a>
     </div>
+    @else
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Proyecto no encontrado',
+                text: @json($error),
+                confirmButtonColor: '#3085d6'
+            });
+        </script>
+        <div class="mt-4 d-flex gap-2">
+                <a href="{{ route('proyectos.panel') }}" class="btn btn-secondary">← Volver al panel</a>
+            </div>
+@endif
+
 </div>
 @endsection

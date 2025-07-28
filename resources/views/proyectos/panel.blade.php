@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+
 @section('content')
 <div class="container mt-4">
     <h1 class="mb-4">Panel de Proyectos</h1>
@@ -17,10 +18,6 @@
     </div>
 </form>
 
-
-    @if($errors->any())
-        <div class="alert alert-danger">{{ $errors->first() }}</div>
-    @endif
 
     <table class="table table-hover table-bordered align-middle">
         <thead class="table-dark">

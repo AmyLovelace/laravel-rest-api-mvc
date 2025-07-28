@@ -16,3 +16,4 @@ Route::put('/proyectos/{id}', [ProyectoController::class, 'update'])->name('proy
 Route::delete('/proyectos/{id}', [ProyectoController::class, 'destroy'])->name('proyectos.destroy');
 Route::get('/proyectos/{id}/edit', [ProyectoController::class, 'edit'])->name('proyectos.edit');
 Route::get('/panel', [ProyectoController::class, 'panel'])->name('proyectos.panel');
+// Route::get('/proyectos/buscar', [ProyectoController::class, 'buscar'])->name('proyectos.buscar');

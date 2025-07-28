@@ -11,7 +11,3 @@ Route::get('/proyecto/{id}', [ProyectoController::class, 'show']);
 Route::put('/proyecto/{id}', [ProyectoController::class, 'update']);
 Route::delete('/proyecto/{id}', [ProyectoController::class, 'destroy']);
 Route::get('/proyectos/buscar', [ProyectoController::class, 'buscar'])->name('proyectos.buscar');
-
-Route::get('/test', function () {
-    return response()->json(['ok' => true]);
-});
